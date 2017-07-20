@@ -89,13 +89,11 @@ def train(BATCH_SIZE):
     d_on_g.compile(loss='binary_crossentropy', optimizer=g_optim)
     d.trainable = True
     d.compile(loss='binary_crossentropy', optimizer=d_optim)
-    noise = np.zeros((BATCH_SIZE, 100))
     for epoch in range(100):
         print("Epoch is", epoch)
         print("Number of batches", int(X_train.shape[0]/BATCH_SIZE))
         for index in range(int(X_train.shape[0]/BATCH_SIZE)):
-            for i in range(BATCH_SIZE):
-                noise[i, :] = np.random.uniform(-1, 1, 100)
+            noise = np.random.uniform(-1, 1, size=(BATCH_SIZE, 100))
             image_batch = X_train[index*BATCH_SIZE:(index+1)*BATCH_SIZE]
             generated_images = g.predict(noise, verbose=0)
             if index % 20 == 0:
@@ -107,8 +105,7 @@ def train(BATCH_SIZE):
             y = [1] * BATCH_SIZE + [0] * BATCH_SIZE
             d_loss = d.train_on_batch(X, y)
             print("batch %d d_loss : %f" % (index, d_loss))
-            for i in range(BATCH_SIZE):
-                noise[i, :] = np.random.uniform(-1, 1, 100)
+            noise = np.random.uniform(-1, 1, (BATCH_SIZE, 100))
             d.trainable = False
             g_loss = d_on_g.train_on_batch(noise, [1] * BATCH_SIZE)
             d.trainable = True
@@ -126,9 +123,7 @@ def generate(BATCH_SIZE, nice=False):
         d = discriminator_model()
         d.compile(loss='binary_crossentropy', optimizer="SGD")
         d.load_weights('discriminator')
-        noise = np.zeros((BATCH_SIZE*20, 100))
-        for i in range(BATCH_SIZE*20):
-            noise[i, :] = np.random.uniform(-1, 1, 100)
+        noise = np.random.uniform(-1, 1, (BATCH_SIZE*20, 100))
         generated_images = g.predict(noise, verbose=1)
         d_pret = d.predict(generated_images, verbose=1)
         index = np.arange(0, BATCH_SIZE*20)
@@ -142,9 +137,7 @@ def generate(BATCH_SIZE, nice=False):
             nice_images[i, :, :, 0] = generated_images[idx, :, :, 0]
         image = combine_images(nice_images)
     else:
-        noise = np.zeros((BATCH_SIZE, 100))
-        for i in range(BATCH_SIZE):
-            noise[i, :] = np.random.uniform(-1, 1, 100)
+        noise = np.random.uniform(-1, 1, (BATCH_SIZE, 100))
         generated_images = g.predict(noise, verbose=1)
         image = combine_images(generated_images)
     image = image*127.5+127.5
